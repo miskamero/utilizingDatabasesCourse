@@ -1,0 +1,113 @@
+﻿@page "/addevent"
+@inject EventDbContext DbContext
+@inject NavigationManager Navigation
+@using EventCalendar.Data
+
+<style>
+    body {
+        background-color: black;
+        color: white;
+    }
+    
+    input {
+        border: 1px solid #555555 !important;
+        background-color: #222222 !important;
+        color: #e0e0e0 !important;
+    }
+
+    input:focus {
+        border-color: #888888 !important;
+        box-shadow: 0 0 5px rgba(136, 136, 136, 0.9) !important;
+    }
+
+    textarea {
+        border: 1px solid #555555 !important;
+        background-color: #222222 !important;
+        color: #e0e0e0 !important;
+    }
+
+    textarea:focus {
+        border-color: #888888 !important;
+        box-shadow: 0 0 5px rgba(136, 136, 136, 0.9) !important;
+    }
+</style>
+
+<PageTitle>Klinoff Calendar</PageTitle>
+
+<h3>Add Event</h3>
+
+@if (DbContext == null)
+{
+    <p>Not properly injected!!?!??</p>
+}
+
+<EditForm Model="newEvent" OnValidSubmit="SaveEvent" FormName="addEventForm" AdditionalAttributes="@(new Dictionary<string, object> { { "FormName", "  " } })">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group mb-3">
+        <label for="title">Title</label>
+        <InputText id="title" @bind-Value="newEvent.Title" class="form-control" />
+        <ValidationMessage For="@(() => newEvent.Title)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="startDate">Start Date</label>
+        <InputDate id="startDate" @bind-Value="newEvent.StartDate" class="form-control" />
+        <ValidationMessage For="@(() => newEvent.StartDate)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="endDate">End Date</label>
+        <InputDate id="endDate" @bind-Value="newEvent.EndDate" class="form-control" />
+        <ValidationMessage For="@(() => newEvent.EndDate)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="location">Location</label>
+        <InputText id="location" @bind-Value="newEvent.Location" class="form-control" />
+        <ValidationMessage For="@(() => newEvent.Location)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="category">Category</label>
+        <InputText id="category" @bind-Value="newEvent.Category" class="form-control" />
+        <ValidationMessage For="@(() => newEvent.Category)" />
+    </div>
+
+    <div class="form-group mb-3">
+        <label for="description">Description</label>
+        <InputTextArea id="description" @bind-Value="newEvent.Description" class="form-control" />
+        <ValidationMessage For="@(() => newEvent.Description)" />
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    private Event newEvent { get; set; }
+
+    protected override void OnInitialized()
+    {
+
+        if(newEvent == null)
+            newEvent = new Event();
+    }
+
+    private async Task SaveEvent()
+    {
+        try
+        {
+            // Save the new event with values from the form
+            DbContext.Events.Add(newEvent);
+            await DbContext.SaveChangesAsync();
+            //empty the fields
+			newEvent = new Event();
+        }
+        catch (Exception ex)
+		{
+			Console.WriteLine(ex.Message);
+		}
+    }
+}

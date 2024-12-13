@@ -1,0 +1,112 @@
+﻿@page "/editpage/{EventId}"
+@rendermode InteractiveServer 
+@inject EventDbContext DbContext
+@inject IJSRuntime JSRuntime
+@inject NavigationManager _navigationManager
+@using EventCalendar.Data
+@using Microsoft.EntityFrameworkCore
+
+<style>
+    body {
+        background-color: black;
+        color: white;
+    }
+
+    input {
+        border: 1px solid #555555 !important;
+        background-color: #222222 !important;
+        color: #e0e0e0 !important;
+    }
+
+    input:focus {
+        border-color: #888888 !important;
+        box-shadow: 0 0 5px rgba(136, 136, 136, 0.9) !important;
+    }
+
+    textarea {
+        border: 1px solid #555555 !important;
+        background-color: #222222 !important;
+        color: #e0e0e0 !important;
+    }
+
+    textarea:focus {
+        border-color: #888888 !important;
+        box-shadow: 0 0 5px rgba(136, 136, 136, 0.9) !important;
+    }
+</style>
+
+<PageTitle>Klinoff Calendar</PageTitle>
+
+<h3>EditEvent</h3>
+ <NavLink class="btn btn-secondary" href="eventlist">
+    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Back
+</NavLink>
+ 
+<div>
+    @if (eventItem != null)
+    {
+        <EditForm Model="eventItem" OnValidSubmit="SaveEvent">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+				<label for="EventName" class="form-label">Event Name</label>
+                <InputText id="EventName" class="form-control" @bind-Value="eventItem.Title" />
+                <ValidationMessage For="@(() => eventItem.Title)" />
+            </div>
+  
+            <div class="mb-3">
+                <label for="EventDate" class="form-label">Event Start Date</label>
+                <InputDate id="EventDate" class="form-control" @bind-Value="eventItem.StartDate" />
+            </div>
+
+            <div class="mb-3">
+                <label for="EventEndDate" class="form-label">Event End Date</label>
+                <InputDate id="EventEndDate" class="form-control" @bind-Value="eventItem.EndDate" />
+            </div>
+
+            <div class="mb-3">
+                <label for="EventLocation" class="form-label">Event Location</label>
+                <InputText id="EventLocation" class="form-control" @bind-Value="eventItem.Location" />
+            </div>
+
+
+            <div class="mb-3">
+                <label for="EventCategory" class="form-label">Event Category</label>
+                <InputText id="EventCategory" class="form-control" @bind-Value="eventItem.Category" />
+            </div>
+
+            <div class="mb-3">
+                <label for="EventDescription" class="form-label">Event Description</label>
+                <InputText id="EventDescription" class="form-control" @bind-Value="eventItem.Description" />
+            </div>
+
+            <button type="submit" class="btn btn-success">Save Changes</button> 
+        </EditForm>
+    }
+    else
+    {
+        <p>Loading...</p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string EventId { get; set; }
+
+    private Event eventItem;
+
+    protected override async Task OnInitializedAsync() =>
+        // Fetch the event from the database using the EventId parameter
+        eventItem = await DbContext.Events.FirstOrDefaultAsync(e => e.Id == Convert.ToInt32(EventId));
+
+    private async Task SaveEvent()
+    {
+        // Save the changes to the event in the database
+        DbContext.Events.Update(eventItem);
+        await DbContext.SaveChangesAsync();
+
+        // Redirect to the event list page after saving
+        _navigationManager.NavigateTo("/eventlist");
+    }
+}

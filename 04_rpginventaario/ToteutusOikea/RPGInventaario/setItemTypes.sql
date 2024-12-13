@@ -1,0 +1,1 @@
+﻿INSERT INTO ItemType (Id, TypeName) VALUES (1, 'Sword'), (2, 'Axe'), (3, 'Bow'), (4, 'Dagger'), (5, 'Mace'), (6, 'Staff');

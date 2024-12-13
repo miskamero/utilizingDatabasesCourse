@@ -1,0 +1,197 @@
+﻿@page "/eventlist"
+@inject EventDbContext DbContext
+@rendermode InteractiveServer
+@using EventCalendar.Data
+@using Microsoft.EntityFrameworkCore
+@using System.Globalization
+
+
+<style>
+    body {
+        background-color: black;
+        color: white;
+    }
+    .EventListTable td {
+        text-align: center;
+        vertical-align: middle;
+        color: white;
+    }
+
+    th {
+        text-align: center;
+        color: white;
+    }
+
+    input {
+        border: 1px solid #555555 !important;
+        background-color: #222222 !important;
+        color: #e0e0e0 !important;
+    }
+
+    input:focus {
+        border-color: #888888 !important;
+        box-shadow: 0 0 5px rgba(136, 136, 136, 0.9) !important;
+    }
+
+    select {
+        border: 1px solid #555555 !important;
+        background-color: #222222 !important;
+        color: #e0e0e0 !important;
+    }
+
+    select:focus {
+        border-color: #888888 !important;
+        box-shadow: 0 0 5px rgba(136, 136, 136, 0.9) !important;
+    }
+
+    select option:first-child {
+        color: #888888;
+    }
+</style>
+<PageTitle>Klinoff Calendar</PageTitle>
+
+<h3>Event List</h3>
+
+<select class="form-select" @onchange="async (e) => await FilterByMonth(e)">
+    <option disabled value="">Filter by Month</option>
+    <option value="">All Months</option>
+    @foreach (var month in Enumerable.Range(1, 12))
+    {
+        <option value="@month">@GetMonthName(month)</option>
+    }
+</select><br/>
+
+<input size="$0" class="form-control" placeholder="Filter by Category" @oninput="DebounceCategoryFilter" /><br/>
+
+<input size="$0" class="form-control" placeholder="Filter by Location" @oninput="DebounceLocationFilter" /><br/>
+
+@code {
+    // workaround for blazor str format BS
+	private void DebounceCategoryFilter(ChangeEventArgs e) => DebouncedFilter(e, "category");
+    private void DebounceLocationFilter(ChangeEventArgs e) => DebouncedFilter(e, "location");
+
+    private Timer DebounceTimer;
+
+    private void DebouncedFilter(ChangeEventArgs e, string FP)
+    {
+        DebounceTimer?.Dispose();
+        DebounceTimer = new Timer(async _ =>
+        {
+			if (FP == "category") 
+                await FilterByCategory(e);
+			else if (FP == "location")
+				await FilterByLocation(e);
+        }, null, 200, Timeout.Infinite);
+    }
+}
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Location</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody class="EventListTable">
+        @foreach (var eventItem in events)
+        {
+            <tr>
+                <td>@eventItem.Id</td>
+                <td>@eventItem.Title</td>
+                <td>@eventItem.StartDate.ToShortDateString()</td>
+                <td>@eventItem.EndDate.ToShortDateString()</td>
+                <td>@eventItem.Location</td>
+                <td>@eventItem.Category</td>
+                <td>@eventItem.Description</td>
+                <td>
+                    <NavLink class="btn btn-primary" href="@($"editpage/{eventItem.Id}")">
+                        <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Edit
+                    </NavLink>
+                    <button class="btn btn-danger" @onclick="async () => await DeleteEvent(eventItem.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Event> events = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        events = await DbContext.Events.ToListAsync();
+    }
+
+    private async Task FilterByMonth(ChangeEventArgs e)
+    {
+        var selectedMonth = e.Value?.ToString();
+        if (string.IsNullOrEmpty(selectedMonth))
+        {
+            events = await DbContext.Events.ToListAsync();
+        }
+        else
+        {
+            var month = int.Parse(selectedMonth);
+            events = await DbContext.Events
+                .Where(ev => ev.StartDate.Month == month || ev.EndDate.Month == month)
+                .ToListAsync();
+        }
+        StateHasChanged(); // Trigger a UI refresh if needed
+    }
+
+    private async Task FilterByCategory(ChangeEventArgs e)
+    {
+        var category = e.Value?.ToString();
+        if (string.IsNullOrEmpty(category))
+        {
+            events = await DbContext.Events.ToListAsync();
+        }
+        else
+        {
+            events = await DbContext.Events
+                .Where(ev => ev.Category.Contains(category))
+                .ToListAsync();
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+	private async Task FilterByLocation(ChangeEventArgs e)
+	{
+		var location = e.Value?.ToString();
+		if (string.IsNullOrEmpty(location))
+		{
+			events = await DbContext.Events.ToListAsync();
+		}
+		else
+		{
+			events = await DbContext.Events
+				.Where(ev => ev.Location.Contains(location))
+				.ToListAsync();
+		}
+		await InvokeAsync(StateHasChanged);
+	}
+
+    private async Task DeleteEvent(int id)
+    {
+        var eventItem = await DbContext.Events.FindAsync(id);
+        if (eventItem != null)
+        {
+            DbContext.Events.Remove(eventItem);
+            await DbContext.SaveChangesAsync();
+            events = await DbContext.Events.ToListAsync(); // Refresh the list of events
+            StateHasChanged(); // Trigger a UI refresh if needed
+        }
+    }
+
+    private string GetMonthName(int month)
+    {
+        return DateTimeFormatInfo.CurrentInfo.GetMonthName(month);
+    }
+}

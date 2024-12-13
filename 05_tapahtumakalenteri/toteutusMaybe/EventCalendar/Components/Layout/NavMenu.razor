@@ -1,0 +1,39 @@
+﻿<style>
+    .klinoff-logo {
+		width: 3rem;
+    }
+
+    .klinoff-logo img {
+        width: 100%;
+        object-fit: contain;
+    }
+
+    .navbar-brand {
+        margin-left: 1rem !important;
+    }
+</style>
+
+<div class="top-row ps-3 navbar navbar-dark">
+    @*Picture logo*@
+    <div class="klinoff-logo">
+        <img src="/images/klinoff.png" alt="Klinoff Calendar Logo" />
+    </div>
+    <a class="navbar-brand" href="">Klinoff Calendar</a>
+    <div class="nav-barr">
+        <nav>
+            <div class="nav-item">
+                <NavLink class="nav-link" href="eventlist">
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Event List
+                </NavLink>
+            </div>
+
+            <div class="nav-item">
+                <NavLink class="nav-link" href="addevent">Add Event</NavLink>
+            </div>
+        </nav>
+    </div>
+</div>
+
+
+
+
