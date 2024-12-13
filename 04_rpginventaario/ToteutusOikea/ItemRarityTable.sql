@@ -1,4 +1,0 @@
-﻿CREATE TABLE ItemRarity (
-    Id INT PRIMARY KEY,
-    RarityName NVARCHAR(100) NOT NULL
-);

@@ -1,1 +1,0 @@
-﻿INSERT INTO ItemRarity (Id, RarityName) VALUES (1, 'Common'), (2, 'Uncommon'), (3, 'Rare'), (4, 'Epic'), (5, 'Mythic');
